@@ -5,15 +5,15 @@ const Constraint = Matter.Constraint;
 
 var engine, world;
 var canvas;
-var player, playerBase, playerArcher;
-var arrow;
-var baseimage;
-var playerimage;
+var palyer, playerBase, playerArcher;
+var playerArrows = [];
+var board1, board2;
+var numberOfArrows = 10;
+
+var score = 0;
 
 function preload() {
   backgroundImg = loadImage("./assets/background.png");
-  baseimage = loadImage("./assets/base.png");
-  playerimage = loadImage("./assets/player.png");
 }
 
 function setup() {
@@ -22,49 +22,154 @@ function setup() {
   engine = Engine.create();
   world = engine.world;
 
-  angleMode(DEGREES);
-
-  var options = {
-    isStatic: true
-  };
-
-  playerBase = Bodies.rectangle(200, 350, 180, 150, options);
-  World.add(world, playerBase);
-
-  player = Bodies.rectangle(250, playerBase.position.y - 160, 50, 180, options);
-  World.add(world,player)
-
+  playerBase = new PlayerBase(300, 500, 180, 150);
+  player = new Player(285, playerBase.body.position.y - 153, 50, 180);
   playerArcher = new PlayerArcher(
     340,
-    playerBase.position.y - 112,
+    playerBase.body.position.y - 180,
     120,
     120
   );
 
-  arrow = new PlayerArrow(
-  playerArcher.body.position.x,playerArcher.body.position.y,100,10
-  );
+  board1 = new Board(width - 300, 330, 50, 200);
+  board2 = new Board(width - 550, height - 300, 50, 200);
 }
 
 function draw() {
   background(backgroundImg);
-  image(baseimage,playerBase.position.x,playerBase.position.y,180,150)
-  image(playerimage,player.position.x,player.position.y,50,180)
+
   Engine.update(engine);
 
+  playerBase.display();
+  player.display();
   playerArcher.display();
-  arrow.display();
 
-  if (keyCode === 32) {
-    // arrow.(playerArcher.body.angle);
-    // arrow.shoot(playerArcher.angle);
-     arrow.shoot(playerArcher.body.angle);
-    // arrow.shoot(playerArcher);
+  board1.display();
+  board2.display();
+
+  for (var i = 0; i < playerArrows.length; i++) {
+    if (playerArrows[i] !== undefined) {
+      playerArrows[i].display();
+
+      var board1Collision = Matter.SAT.collides(
+        board1.body,
+        playerArrows[i].body
+      );
+
+      var board2Collision = Matter.SAT.collides(
+        board2.body,
+        playerArrows[i].body
+      );
+
+      /*if (board1Collision || board2Collision) {
+        score += 5;
+      }*/
+
+     // if (board1Collision.collided && board2Collision.collided) {
+        //score += 5;
+     // }
+
+      //if (board1Collision.collided || board2Collision.collided) {
+        //score += 5;
+     // }
+
+      /*if (board1Collision.collided || board2Collision.collided) {
+        score = 5;
+      }*/
+
+      
+      var posX = playerArrows[i].body.position.x;
+      var posY = playerArrows[i].body.position.y;
+
+      if (posX > width || posY > height) {
+        if (!playerArrows[i].isRemoved) {
+          playerArrows[i].remove(i);
+        } else {
+          playerArrows[i].trajectory = [];
+        }
+      }
+    }
   }
+}
 
-  // Title
+  //Título
   fill("#FFFF");
   textAlign("center");
   textSize(40);
   text("TIRO CON ARCO ÉPICO", width / 2, 100);
+
+  //Puntuación
+  fill("#FFFF");
+  textAlign("center");
+  textSize(30);
+  text("Puntuación " + score, width - 200, 100);
+
+  //Conteo de flechas
+  fill("#FFFF");
+  textAlign("center");
+  textSize(30);
+  text("Flechas restantes : " + numberOfArrows, 200, 100);
+
+  /*if (numberOfArrows == 5) {
+    gameOver();
+  }*/
+
+  if (numberOfArrows == 0) {
+    gameOver();
+  }
+
+  /*if (numberOfArrows = 0) {
+    gameOver();
+  }*/
+
+  /*if (numberOfArrows == 0) {
+    gameOver;
+  }*/
+
+
+
+function keyPressed() {
+  if (keyCode === 32) {
+    if (numberOfArrows > 0) {
+      var posX = playerArcher.body.position.x;
+      var posY = playerArcher.body.position.y;
+      var angle = playerArcher.body.angle;
+
+      var arrow = new PlayerArrow(posX, posY, 100, 10, angle);
+
+      arrow.trajectory = [];
+      Matter.Body.setAngle(arrow.body, angle);
+      playerArrows.push(arrow);
+      numberOfArrows -= 1;
+    }
+  }
 }
+
+function keyReleased() {
+  if (keyCode === 32) {
+    if (playerArrows.length) {
+      var angle = playerArcher.body.angle;
+      playerArrows[playerArrows.length - 1].shoot(angle);
+    }
+  }
+}
+
+function gameOver() {
+  swal(
+    {
+      title: `¡Fin del juego!`,
+      text: "¡Gracias por jugar!",
+      imageUrl:
+        "https://raw.githubusercontent.com/vishalgaddam873/PiratesInvision/main/assets/board.png",
+      imageSize: "150x150",
+      confirmButtonText: "Jugar de nuevo"
+    },
+    function(isConfirm) {
+      if (isConfirm) {
+        location.reload();
+      }
+    }
+  );
+}
+
+
