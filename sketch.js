@@ -6,7 +6,9 @@ const Constraint = Matter.Constraint;
 var engine, world;
 var canvas;
 var player, playerBase, playerArcher;
+var arrow;
 var baseimage;
+var playerimage;
 
 function preload() {
   backgroundImg = loadImage("./assets/background.png");
@@ -19,34 +21,48 @@ function setup() {
 
   engine = Engine.create();
   world = engine.world;
+
   angleMode(DEGREES);
 
-  var stacion = {isStatic : true}
+  var options = {
+    isStatic: true
+  };
 
-  playerBase = Bodies.rectangle(475,300,150,200,stacion)
-  World.add(world,playerBase)
+  playerBase = Bodies.rectangle(200, 350, 180, 150, options);
+  World.add(world, playerBase);
 
-  player = Bodies.rectangle(500,playerBase.position.y - 175,100,200,stacion)
+  player = Bodies.rectangle(250, playerBase.position.y - 160, 50, 180, options);
   World.add(world,player)
 
+  playerArcher = new PlayerArcher(
+    340,
+    playerBase.position.y - 112,
+    120,
+    120
+  );
 
-
+  arrow = new PlayerArrow(
+  playerArcher.body.position.x,playerArcher.body.position.y,100,10
+  );
 }
 
 function draw() {
   background(backgroundImg);
-
-  //mostrar la imagen del jugador utilizando la función image()
-
-  //mostrar la imagen de la base del jugador utilizando la función image()
-
-
+  image(baseimage,playerBase.position.x,playerBase.position.y,180,150)
+  image(playerimage,player.position.x,player.position.y,50,180)
   Engine.update(engine);
-  image(baseimage,playerBase.position.x,playerBase.position.y,150,200)
 
-  image(playerimage,player.position.x,player.position.y,100,200)
+  playerArcher.display();
+  arrow.display();
 
-  // Título
+  if (keyCode === 32) {
+    // arrow.(playerArcher.body.angle);
+    // arrow.shoot(playerArcher.angle);
+     arrow.shoot(playerArcher.body.angle);
+    // arrow.shoot(playerArcher);
+  }
+
+  // Title
   fill("#FFFF");
   textAlign("center");
   textSize(40);
